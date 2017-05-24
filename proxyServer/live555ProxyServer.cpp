@@ -35,6 +35,10 @@ char* password = NULL;
 Boolean proxyREGISTERRequests = False;
 char* usernameForREGISTER = NULL;
 char* passwordForREGISTER = NULL;
+// Increase the maximum size of video frames that we can 'proxy' without truncation.
+// (Such frames are unreasonably large; the back-end servers should really not be sending frames this large!)
+unsigned int outPacketBufferSize = 100 * 1024;
+
 
 static RTSPServer* createRTSPServer(Port port) {
   if (proxyREGISTERRequests) {
@@ -46,6 +50,7 @@ static RTSPServer* createRTSPServer(Port port) {
 
 void usage() {
   *env << "Usage: " << progName
+       << " [-b <OutPacketBuffer::maxSize>]"
        << " [-v|-V]"
        << " [-t|-T <http-port>]"
        << " [-p <rtspServer-port>]"
@@ -56,9 +61,6 @@ void usage() {
 }
 
 int main(int argc, char** argv) {
-  // Increase the maximum size of video frames that we can 'proxy' without truncation.
-  // (Such frames are unreasonably large; the back-end servers should really not be sending frames this large!)
-  OutPacketBuffer::maxSize = 100000; // bytes
 
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -111,6 +113,22 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'b': {
+      // specify OutPacketBuffer::maxSize
+      if (argc > 2 && argv[2][0] != '-') {
+        // The next argument is the OutPacketBuffer::maxSize
+        if (sscanf(argv[2], "%u", &outPacketBufferSize) == 1
+            && outPacketBufferSize > 0) {
+          ++argv; --argc;
+          break;
+        }
+      }
+
+      // If we get here, the option was specified incorrectly:
+      usage();
+      break;
+    }
+    
     case 'p': {
       // specify a rtsp server port number 
       if (argc > 2 && argv[2][0] != '-') {
@@ -185,6 +203,7 @@ int main(int argc, char** argv) {
   authDB->addUserRecord("username1", "password1"); // replace these with real strings
       // Repeat this line with each <username>, <password> that you wish to allow access to the server.
 #endif
+  OutPacketBuffer::maxSize = outPacketBufferSize;
 
   // Create the RTSP server
   RTSPServer* rtspServer;
