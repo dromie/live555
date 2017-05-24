@@ -186,26 +186,11 @@ int main(int argc, char** argv) {
       // Repeat this line with each <username>, <password> that you wish to allow access to the server.
 #endif
 
-  // Create the RTSP server. Try first with the configured port number,
-  // and then with the default port number (554) if different,
-  // and then with the alternative port number (8554):
+  // Create the RTSP server
   RTSPServer* rtspServer;
   rtspServer = createRTSPServer(rtspServerPortNum);
   if (rtspServer == NULL) {
-    if (rtspServerPortNum != 554) {
-      *env << "Unable to create a RTSP server with port number " << rtspServerPortNum << ": " << env->getResultMsg() << "\n";
-      *env << "Trying instead with the standard port numbers (554 and 8554)...\n";
-
-      rtspServerPortNum = 554;
-      rtspServer = createRTSPServer(rtspServerPortNum);
-    }
-  }
-  if (rtspServer == NULL) {
-    rtspServerPortNum = 8554;
-    rtspServer = createRTSPServer(rtspServerPortNum);
-  }
-  if (rtspServer == NULL) {
-    *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
+    *env << "Unable to create a RTSP server with port number " << rtspServerPortNum << ": " << env->getResultMsg() << "\n";
     exit(1);
   }
 
